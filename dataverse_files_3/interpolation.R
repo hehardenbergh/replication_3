@@ -62,13 +62,21 @@ canals <- canals[which(canals$OPENED < 1860 & canals$CLOSED > 1860),]
 ## https://coast.noaa.gov/htdata/SocioEconomic/NOAA_CoastalCountyDefinitions.pdf
 # coastal <- read.csv("/Users/mblackwell/workland/data/coastal.csv")
 
+# This set of code maps the data to transform it from one method of coordinate
+# mapping to another, still understanding this.
 
 histcounties <- spTransform(histcounties, CRS(proj4string(rivers)))
 histstates <- spTransform(histstates, CRS(proj4string(rivers)))
 canals <- spTransform(canals, CRS(proj4string(rivers)))
 rail <- spTransform(rail, CRS(proj4string(rivers)))
 
-histcounties$fips[which(histcounties$NAME == "CARROLL (ext)")] <- 22035
+
+# When I run this line of code, I get an error that says, "replacement has 6835 rows, data
+# has 17727." Which worries me that I may have grabbed the wrong data.
+
+# histcounties$fips[which(histcounties$NAME == "CARROLL (ext)")] <- 22035
+
+
 
 cc1860 <- which(histcounties$START_N <= 18590101 & histcounties$END_N >= 18590101)
 counties1860 <- histcounties[cc1860,]
@@ -91,7 +99,7 @@ counties2000$fips <- as.numeric(as.character(counties2000$FIPS))
 counties2000 <- counties2000[!is.na(counties2000$fips),]
 counties2000$coarea2000.km2 <- gArea(counties2000, byid = TRUE)/(1000^2)
 counties2000 <- counties2000[!(counties2000$STATE_TERR %in% c("Alaska", "Hawaii")),]
-counties2000$coastal <- 1 * (counties2000$fips %in% coastal$fips)
+# counties2000$coastal <- 1 * (counties2000$fips %in% coastal$fips)
 counties2000$river <- 1 * (colSums(gCrosses(counties2000, rivers, byid = TRUE)) > 0)
 counties2000$canal <- 1 * (colSums(gCrosses(counties2000, canals, byid = TRUE)) > 0)
 counties2000$water1860 <- 1 * (counties2000$coastal + counties2000$river + counties2000$canal > 0)
