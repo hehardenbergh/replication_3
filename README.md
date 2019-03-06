@@ -1,4 +1,4 @@
 ## Replication 3: "The Political Legacy of American Slavery"
-### Authors: Avidit Acharya, Stanford University Matthew Blackwell, Harvard University Maya Sen, Harvard University
+### Authors: Avidit Acharya, Matthew Blackwell, Maya Sen
 
-#### Replication completed by Hannah Hardenbergh
+ Replication completed by Hannah Hardenbergh
