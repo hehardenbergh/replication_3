@@ -1,3 +1,9 @@
+# This is replication code for "The Political Legacy of American Slavery," by
+# authors Avidit Acharya, Matthew Blackwell, Maya Sen.
+
+
+# Load libraries
+
 library(raster)
 library(rgdal)
 library(rgeos)
@@ -9,6 +15,10 @@ library(maptools)
 library(foreign)
 library(RColorBrewer)
 library(classInt)
+
+# Still grasping this idea of a "promise" obejct, but seems like state.fips is
+# loaded now to be used later.
+
 data(state.fips)
 state.fips <- unique(state.fips[,c("fips","abb")])
 state.fips$abb <- as.character(state.fips$abb)
@@ -19,13 +29,17 @@ fips.state <- state.fips
 rownames(fips.state) <- fips.state$fips
 data(county.fips)
 
-#### http://publications.newberry.org/ahcbp/
-histcounties <- readOGR("/Users/mblackwell/workland/data/US_AtlasHCB_Counties_Gen001/US_HistCounties_Gen001_Shapefile",
-                        layer = "US_HistCounties_Gen001")
+
+#Here, I altered the file paths because it was simply easier to use the terminal
+#(Thank you Preceptor for drilling that home in 1005) once I had downloaded it
+#from this URL: http://publications.newberry.org/ahcbp/
+
+histcounties <- readOGR("US_AtlasHCB_Counties/US_HistCounties_Shapefile",
+                         layer = "US_HistCounties")
 histcounties$fips <- as.numeric(as.character(histcounties$FIPS))
 
-histstates <- readOGR("/Users/mblackwell/workland/data/US_AtlasHCB_StateTerr_Gen001/US_HistStateTerr_Gen001_Shapefile", 
-                      layer = "US_HistStateTerr_Gen001")
+histstates <- readOGR("US_AtlasHCB_StateTerr/US_HistStateTerr_Shapefile", 
+                      layer = "US_HistStateTerr")
 
 ## These data are from Jeremy Atack
 ## https://my.vanderbilt.edu/jeremyatack/data-downloads/
