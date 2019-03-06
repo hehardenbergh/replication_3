@@ -41,19 +41,26 @@ histcounties$fips <- as.numeric(as.character(histcounties$FIPS))
 histstates <- readOGR("US_AtlasHCB_StateTerr/US_HistStateTerr_Shapefile", 
                       layer = "US_HistStateTerr")
 
-## These data are from Jeremy Atack
-## https://my.vanderbilt.edu/jeremyatack/data-downloads/
-## other possible sources for rails: http://railroads.unl.edu/resources/
-rail <- readOGR("/Users/mblackwell/workland/data/RR1826-19113", "RR1826-1911")
+#Same thing here when replicating, download and call data from within terminal
+#first. 
+# These data are from Jeremy Atack 
+#https://my.vanderbilt.edu/jeremyatack/data-downloads/ # other possible sources
+#for rails: http://railroads.unl.edu/resources/
+
+rail <- readOGR("/Users/hehardenbergh/replication_3/RR1826-1911")
 rail <- rail[rail$InOpBy < 1860,]
-rivers <- readOGR("/Users/mblackwell/workland/data/SteamboatNavigatedRivers2", layer = "SteamboatNavigatedRivers")
+
+rivers <- readOGR("SteamboatNavigatedRiver")
 rivers <- rivers[rivers$START < 1860 & rivers$END > 1870,]
-canals <- readOGR("/Users/mblackwell/workland/data/19thC_Canals2", layer = "19thC_Canals")
+
+canals <- readOGR("19thC_Canals_March2017")
 canals <- canals[which(canals$OPENED < 1860 & canals$CLOSED > 1860),]
+
+# Not sure where he gets this data yet.
+
 ## coastal/shoreline data comes from the NOAA
 ## https://coast.noaa.gov/htdata/SocioEconomic/NOAA_CoastalCountyDefinitions.pdf
-##
-coastal <- read.csv("/Users/mblackwell/workland/data/coastal.csv")
+# coastal <- read.csv("/Users/mblackwell/workland/data/coastal.csv")
 
 
 histcounties <- spTransform(histcounties, CRS(proj4string(rivers)))
