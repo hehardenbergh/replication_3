@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 # This is replication code for "The Political Legacy of American Slavery," by
-# authors Avidit Acharya, Matthew Blackwell, Maya Sen.
+# authors Avidit Acharya, Matthew Blackwell, Maya Sen. I replicate Tables 1, 3, and all figures.
 
 
 # Load libraries
@@ -27,9 +27,15 @@ library(maptools)
 library(foreign)
 library(RColorBrewer)
 library(classInt)
+library(tidyverse)
 
 # Still grasping this idea of a "promise" obejct, but seems like state.fips is
-# loaded now to be used later.
+# loaded now to be used for figure 1. FIPS is the Federal Information Processing
+# Standard for each state, numeric codes assigned by the National Institute of
+# Standards and Technology (NIST). for states it is two digits, and the data
+# continues on to load county data as well. county codes are typically 4 digits.
+# from my understanding, these code assignments have been replaced, but
+# that is irrelevant?
 
 data(state.fips)
 state.fips <- unique(state.fips[,c("fips","abb")])
@@ -68,19 +74,23 @@ rivers <- rivers[rivers$START < 1860 & rivers$END > 1870,]
 canals <- readOGR("19thC_Canals_March2017")
 canals <- canals[which(canals$OPENED < 1860 & canals$CLOSED > 1860),]
 
-# Not sure where he gets this data yet.
-
 ## coastal/shoreline data comes from the NOAA
 ## https://coast.noaa.gov/htdata/SocioEconomic/NOAA_CoastalCountyDefinitions.pdf
-# coastal <- read.csv("/Users/mblackwell/workland/data/coastal.csv")
+# Same as above, using terminal I just move into working directory then load as .csv
+
+#coastal <- read_csv("NOAA_CoastalCountyDefinitions.pdf")
 
 # This set of code maps the data to transform it from one method of coordinate
 # mapping to another, still understanding this.
 
-histcounties <- spTransform(histcounties, CRS(proj4string(rivers)))
-histstates <- spTransform(histstates, CRS(proj4string(rivers)))
-canals <- spTransform(canals, CRS(proj4string(rivers)))
-rail <- spTransform(rail, CRS(proj4string(rivers)))
+histcounties <- spTransform(histcounties, 
+                            CRS(proj4string(rivers)))
+histstates <- spTransform(histstates,
+                          CRS(proj4string(rivers)))
+canals <- spTransform(canals, 
+                      CRS(proj4string(rivers)))
+rail <- spTransform(rail, 
+                    CRS(proj4string(rivers)))
 
 
 # When I run this line of code, I get an error that says, "replacement has 6835 rows, data
@@ -88,7 +98,14 @@ rail <- spTransform(rail, CRS(proj4string(rivers)))
 
 # histcounties$fips[which(histcounties$NAME == "CARROLL (ext)")] <- 22035
 
+# The explanatory variable here is the proportion of each county’s popula- tion
+# of enslaved people in 1860, as measured by the 1860 US Census. the authors use
+# this to represent "slavery's prevalence."
 
+# Since county boundaries have changed since 1860, authors use an area-weighting
+# method to map data from the 1860 Census onto county boundaries in 2000, which
+# allows them to estimate the proportion of enslaved peoples in 1860 while using
+# modern-day county lines. figure 1 shows data for this.
 
 cc1860 <- which(histcounties$START_N <= 18590101 & histcounties$END_N >= 18590101)
 counties1860 <- histcounties[cc1860,]
@@ -106,6 +123,11 @@ counties1860 <- SpatialPolygonsDataFrame(newpolys, data = kk)
 counties1860$coarea1860.km2 <- gArea(counties1860, byid = TRUE)/(1000^2)
 
 cc2000 <- which(histcounties$START_N <= 20001231 & histcounties$END_N >= 20001231)
+
+# counties2000 prints as a Spatial Polygons Dataframe. not sure what that is
+# yet, but it's not a tibble! So, it's easy to use as_tibble() in order to take
+# a look at the data.
+
 counties2000 <- histcounties[cc2000,]
 counties2000$fips <- as.numeric(as.character(counties2000$FIPS))
 counties2000 <- counties2000[!is.na(counties2000$fips),]
@@ -117,14 +139,7 @@ counties2000$canal <- 1 * (colSums(gCrosses(counties2000, canals, byid = TRUE)) 
 counties2000$water1860 <- 1 * (counties2000$coastal + counties2000$river + counties2000$canal > 0)
 counties2000$rail1860 <- 1 * (colSums(gCrosses(counties2000, rail, byid = TRUE)) > 0)
 
-## test plots
-## plot(counties2000, border = "grey80", col = ifelse(counties2000$coastal, "grey60", "white"))
-## plot(counties1860, border = "grey80", col = ifelse(counties1860$water, "grey60", "white"))
-## plot(rivers[rivers$END > 1860,], col = "dodgerblue", lwd = 1, add = TRUE)
-## plot(counties2000, border = "grey80", col = ifelse(counties2000$canal, "grey60", "white"))
-## plot(canals, col = "dodgerblue", lwd = 1, add = TRUE)
-## plot(counties2000, border = "grey80", col = ifelse(counties2000$rail1860, "grey60", "white"))
-## plot(rail, col = "indianred", add = TRUE)
+
 
 
 ss2000 <- which(histstates$START_N <= 20001231 & histstates$END_N >= 20001231)
