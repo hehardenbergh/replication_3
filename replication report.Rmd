@@ -46,6 +46,13 @@ source("dataverse_files_3/panel-utils.R")
 # map the 2000 census data over the 1860 data, guessing at "slavery's
 # prevalence" within modern counties as they existed in 2000.
 
+# loaded now to be used for figure 1. FIPS is the Federal Information Processing
+# Standard for each state, numeric codes assigned by the National Institute of
+# Standards and Technology (NIST). for states it is two digits, and the data
+# continues on to load county data as well. county codes are typically 4 digits.
+# from my understanding, these code assignments have been replaced, but
+# that is irrelevant?
+
 data(state.fips)
 state.fips <- unique(state.fips[,c("fips","abb")])
 state.fips$abb <- as.character(state.fips$abb)
