@@ -6,7 +6,9 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      warning = FALSE)
 
 # This is replication code for "The Political Legacy of American Slavery," by
 # authors Avidit Acharya, Matthew Blackwell, Maya Sen. I replicate Tables 1, 3,
@@ -108,7 +110,7 @@ ch.row <- function(name, yesno) {
 
 ```
 
-```{r load csv files, cache=TRUE}
+```{r load csv files, include=FALSE, cache=TRUE}
 
 #this chunk reads in the data. 
 
@@ -177,7 +179,7 @@ dim(ns.blacks)
 sum(nes.counties$state.abb %in% st.list)
 ```
 
-```{r run regressions for Table 1}
+```{r run regressions for Table 1, include=FALSE}
 
 # This chunk lays out the regressions for table 1. Why do they make them so hard
 # to read?!?! just hit enter a couple times between objects on the RHS, makes a
@@ -235,7 +237,7 @@ rform.form <- formula(. ~  cottonsuit + log(coarea00) + rugged + latitude + I(la
                         longitude + I(longitude^2)  + water1860+  state.abb)
 ```
 
-```{r Figure 2, results="asis"}
+```{r Figure 2}
 
 #Funny, for how meticulous the readme is, they mislabeled a variable in this
 #next code chunk. pslave is actually pslave1860... small error. moving on..
@@ -324,7 +326,7 @@ abline(lm(I(wtherm-btherm) ~ pslave1860,
 
 ```
 
-```{r results="asis"}
+```{r results='asis', cache=TRUE}
 
 ## models for Tables 1 & 2
 
@@ -450,7 +452,7 @@ tab1 <- stargazer(cnty.res,
 #cat(paste(tab1.alt, collapse = "\n"), "\n", file = "../tables/main-results.tex")
 ```
 
-```{r  table 2, results="asis", cache=TRUE}
+```{r  table 2, results='asis', cache=TRUE}
 
 cnty.res.neighbor <- lm(update(base1860.form, dem ~ .), 
                         data = south.counties, 
@@ -488,38 +490,37 @@ mvars <- c("dem",
 
 mdata$south <- 1 * (mdata$state.abb %in% st.list)
 
-mout <- cem(treatment = "south",
-            data = mdata[,mvars], 
-            drop = c("dem", 
-                     "affirm",
-                     "resent"),
-            k2k = TRUE,
-            datalist = NULL)
+# mout <- cem(treatment = "south",
+            # data = mdata[,mvars], 
+            # drop = c("dem", 
+            #          "affirm",
+            #          "resent"),
+            # k2k = TRUE)
 
-match.dem <- lm(update(base1860.form, dem ~ south + . - pslave1860 - state.abb), 
-                data = mdata,
-                weights = sample.size, 
-                subset = mout$w > 0)
+# match.dem <- lm(update(base1860.form, dem ~ south + . - pslave1860 - state.abb), 
+                # data = mdata,
+                # weights = sample.size, 
+                # subset = mout$w > 0)
 
-match.aff <- lm(update(base1860.form, affirm ~ south + . - pslave1860 - state.abb), 
-                data = mdata,
-                weights = sample.size, 
-                subset = mout$w > 0)
+# match.aff <- lm(update(base1860.form, affirm ~ south + . - pslave1860 - state.abb), 
+                # data = mdata,
+                # weights = sample.size, 
+                # subset = mout$w > 0)
 
-match.resent <- lm(update(base1860.form, resent ~ south + . - pslave1860 - state.abb), 
-                   data = mdata,
-                   weights = sample.size.res,
-                   subset = mout$w > 0)
+# match.resent <- lm(update(base1860.form, resent ~ south + . - pslave1860 - state.abb), 
+                   # data = mdata,
+                   # weights = sample.size.res,
+                   # subset = mout$w > 0)
 
 
 # Code chunks for Table 2 graphics:
 
 match.tab <- stargazer(cnty.res.neighbor, 
-                       match.dem,
+                       #match.dem,
                        cnty.aff.neighbor, 
-                       match.aff, 
+                       #match.aff, 
                        cnty.resent.neighbor,
-                       match.resent,
+                       #match.resent,
           dep.var.labels = c("Prop Democrat", 
                              "Affirm. Action", 
                              "Racial Resentment"),
@@ -544,21 +545,11 @@ match.tab <- stargazer(cnty.res.neighbor,
                            rep("", 7)), 
           multicolumn = TRUE)
 
-match.tab[4] <- "\\\\[-1.8ex] &  \\multicolumn{2}{c}{Prop. Democrat} & \\multicolumn{2}{c}{Affirm. Action} & \\multicolumn{2}{c}{Racial Resentment} \\\\ "
 
-match.tab <- gsub("\\{\\*\\}", "\\{\\\\dagger\\}", match.tab)
-
-match.tab <- gsub("\\{\\*\\*\\}", "\\{\\*\\}", match.tab)
-
-match.tab <- gsub("\\{\\*\\*\\*\\}", "\\{\\*\\*\\}", match.tab)
-
-match.tab <- match.tab[-(length(match.tab)-1)]
-
-cat(paste(match.tab, collapse = "\n"), "\n")
 
 ```
 
-```{r Table 3, results="asis", cache=TRUE}
+```{r Table 3, results='asis', cache=TRUE}
 
 cor(south.counties$pslave1860, south.counties$blkprop00, use = "pairwise")
 
@@ -654,7 +645,7 @@ summary(cnty.resent.blk00)
 
 ```
 
-```{r Figure 4, results="asis", cache=TRUE}
+```{r Figure 4, results='asis', cache=TRUE}
 
 
 ## Most county boundaries are set by 1925 or so.
@@ -694,6 +685,7 @@ for (y in 1:length(outvars)) {
     } else {
       thismod <- lm(update(base1860.form, ff), data = countydata, subset = state.abb %in% st.list)
     }
+  }
     
     pdemcoefs[y,1] <- 0.25*coef(thismod)[2]
     
@@ -809,7 +801,7 @@ text(x = 2008, y = 25*coef(obama.iv)["pslave1860"], "Obama\n2008", pos = 4)
 ##dev.off()
 ```
 
-```{r Table 6, results="asis", cache=TRUE}
+```{r Table 6, results='asis'}
 
 # This code makes models for Table 6, three logistic regressions:
 
@@ -859,18 +851,6 @@ young.tab <- stargazer(young.dem.1860,
                            ch.row("State-Year Fixed Effects", rep(c(TRUE),3)), 
                            ch.row("1860 Covariates", rep(TRUE, 3)), rep("", 4)),
           multicolumn = FALSE)
-
-young.tab <- gsub("\\{\\*\\}", "\\{\\\\dagger\\}", young.tab)
-
-young.tab <- gsub("\\{\\*\\*\\}", "\\{\\*\\}", young.tab)
-
-young.tab <- gsub("\\{\\*\\*\\*\\}", "\\{\\*\\*\\}", young.tab)
-
-young.tab <- young.tab[-(length(young.tab)-1)]
-
-cat(paste(young.tab, collapse = "\n"), "\n")
-
-
 
 
 ```
