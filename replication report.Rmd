@@ -109,6 +109,7 @@ ch.row <- function(name, yesno) {
 ```
 
 ```{r load csv files, cache=TRUE}
+
 #this chunk reads in the data. 
 
 countydata <- read_csv("dataverse_files_3/abs-jop-countydata.csv")
@@ -120,6 +121,7 @@ cces.comb <- read_csv("dataverse_files_3/abs-jop-cces-ind.csv")
 # objects in order to show a 1-0 scale instead of true-false?
 
 st.list <- c("AL", "AR", "GA", "FL", "KY", "LA", "MS", "MO", "NC", "SC", "TN", "TX", "VA","WV")
+
 cces.comb$abs.sample <- 1 * (cces.comb$state.abb %in% st.list)
 wh.counties$abs.sample <- 1 * (wh.counties$state.abb %in% st.list)
 countydata$abs.sample <- 1 * (countydata$state.abb %in% st.list)
@@ -130,16 +132,6 @@ whites <- cces.comb[which(cces.comb$white == 1),]
 blacks <- cces.comb[which(cces.comb$black == 1),]
 latinos <- cces.comb[which(cces.comb$latino == 1),]
 others <- cces.comb[which(cces.comb$white != 1 & cces.comb$black != 1 & cces.comb$latino != 1),]
-
-dim(cces.comb)
-dim(whites)
-sum(whites$state.abb %in% st.list)
-
-dim(blacks)
-sum(blacks$state.abb %in% st.list)
-
-dim(latinos)
-sum(latinos$state.abb %in% st.list)
 
 
 ## Individual-level data
@@ -213,7 +205,8 @@ ind.int.form <- formula(. ~ pslave1860   + log(coarea00) + latitude + I(latitude
                         + state.abb*as.factor(year))
 
 context.form <- formula(. ~ pslave1860   + log(coarea00) + latitude + I(latitude^2) +
-                          longitude + I(longitude^2) + rugged + land.ineq1860 + sfarmprop1860
+                          longitude + I(longitude^2) + rugged + land.ineq1860 +
+                          sfarmprop1860
                         + log(totpop1860) + log(fvalpac1860) + log(acimp1860) + fbprop1860
                         + rail1860 + water1860 + as.factor(educ) + inc.cat  +religion +
                           female + age + blkprop.z00 + log(medinc.z10) + w.unemp.rate2014 +
@@ -333,73 +326,60 @@ abline(lm(I(wtherm-btherm) ~ pslave1860,
 
 ```{r results="asis"}
 
-## Tables 1 & 2
+## models for Tables 1 & 2
 
 cnty.res <- lm(dem ~ pslave1860, 
                data = south.counties, 
                weights = sample.size)
-summary(cnty.res)
 
 cnty.res.fe <- lm(dem ~ pslave1860 + state.abb, 
                   data = south.counties, 
                   weights = sample.size)
-summary(cnty.res.fe)
 
 cnty.res.full <- lm(update(base1860.form, dem ~ .), 
                     data = south.counties, 
                     weights = sample.size)
-summary(cnty.res.full)
 
 cnty.aff <- lm(affirm ~ pslave1860, 
                data = south.counties, 
                weights = sample.size)
-summary(cnty.aff)
 
 cnty.aff.fe <- lm(affirm ~ pslave1860 + state.abb, 
                   data = south.counties, 
                   weights = sample.size)
-summary(cnty.aff.fe)
 
 cnty.aff.full <- lm(update(base1860.form, affirm ~ .),
                     data = south.counties, 
                     weights = sample.size)
-summary(cnty.aff.full)
-
 
 cnty.resent <- lm(resent ~ pslave1860, 
                   data = south.counties, 
                   weights = sample.size.res)
-summary(cnty.resent)
 
 cnty.resent.fe <- lm(resent ~ pslave1860 +  state.abb, 
                      data = south.counties, 
                      weights = sample.size.res)
-summary(cnty.resent.fe)
 
 cnty.resent.full <- lm(update(base1860.form, resent ~ .),
                        data = south.counties,
                        weights = sample.size.res)
-summary(cnty.resent.full)
 
 ## NES Individual Results
 therm.mod <- lm(therm.diff ~ pslave1860, 
                 data = ns.whites, 
                 weights = weight)
 therm.mod.rse <- robust.se(therm.mod, clvar = "fips")
-therm.mod.rse
 
 therm.mod.fe <- lm(therm.diff ~ pslave1860 + state.abb*as.factor(year),
                    data = ns.whites, 
                    weights = weight)
 therm.mod.fe.rse <- robust.se(therm.mod.fe, clvar = "fips")
-therm.mod.fe.rse
 
 therm.1860 <- lm(update(base1860.form, therm.diff ~ . + state.abb*as.factor(year)),
                  data = ns.whites, 
                  weights = weight)
-therm.1860.rse <- robust.se(therm.1860, clvar = "fips")
-therm.1860.rse
 
+therm.1860.rse <- robust.se(therm.1860, clvar = "fips")
 
 
 ## This code actually makes the table graphic:
@@ -424,64 +404,68 @@ tab1 <- stargazer(cnty.res,
                                    rep("", 4)), 
                   multicolumn = TRUE)
 
-tab1[4] <- "\\\\[-1.8ex] & \\multicolumn{2}{c}{Prop. Democrat} & Affirm. Action & Racial Resentment \\\\ "
-
-tab1 <- gsub("\\{\\*\\}", "\\{\\\\dagger\\}", tab1)
-
-tab1 <- gsub("\\{\\*\\*\\}", "\\{\\*\\}", tab1)
-
-tab1 <- gsub("\\{\\*\\*\\*\\}", "\\{\\*\\*\\}", tab1)
-
-tab1 <- tab1[-(length(tab1)-1)]
-
-cat(paste(tab1, collapse = "\n"), "\n")
 
 # the following code creates another table like table 1 except that they add
 # State-Year Fixed Effects and Clustered Standard Errors. they don't plot it and
 # only use tab1. I wonder what the difference is for the final publication? why
 # not include these other statistical observances?
 
-tab1.alt <- stargazer(cnty.res, 
-                      cnty.res.full, 
-                      cnty.aff.full, 
-                      cnty.resent.full, 
-                      therm.1860,
-                      se = list(NULL, NULL, NULL, NULL, 
-                                therm.1860.rse[,2]),
-                  keep = "pslave1860", 
-                  style = "apsr", 
-                  omit.stat = c("adj.rsq","ll", "F", "ser"),
-                  covariate.labels = c("Prop. Slave, 1860"), 
-                  dep.var.labels = c("Prop Democrat", "Affirm. Action", "Racial Resentment"),
-                  column.sep.width = "5pt", 
-                  float = FALSE,
-                  header = FALSE,
-                  add.lines = list(rep("", 4), c("Level", "County", "County", "County", "County", "Individual"),
-                                   ch.row("1860 Covariates", c(FALSE, rep(TRUE,3), FALSE)), 
-                                   ch.row("State Fixed Effects", c(FALSE, rep(TRUE,4))), 
-                                   ch.row("State-Year Fixed Effects", c(rep(FALSE,4), TRUE)), 
-                                   ch.row("Clustered SEs", c(rep(FALSE,4), TRUE)), rep("", 4)), 
-                  multicolumn = TRUE)
-
-tab1.alt[4] <- "\\\\[-1.8ex] & \\multicolumn{2}{c}{Proportion} & Support for & Racial  & White-Black  \\\\ "
-
-tab1.alt <- append(tab1.alt, " & \\multicolumn{2}{c}{Democrat} & Affirm. Action &  Resentment & Therm. Diff  \\\\ ", 
-                   after = 4)
-
-tab1.alt <- gsub("\\{\\*\\}", "\\{\\\\dagger\\}", tab1.alt)
-
-tab1.alt <- gsub("\\{\\*\\*\\}", "\\{\\*\\}", tab1.alt)
-
-tab1.alt <- gsub("\\{\\*\\*\\*\\}", "\\{\\*\\*\\}", tab1.alt)
-
-tab1.alt <- tab1.alt[-(length(tab1.alt)-1)]
-
-cat(paste(tab1.alt, collapse = "\n"), "\n")
+# tab1.alt <- stargazer(cnty.res, 
+#                       cnty.res.full, 
+#                       cnty.aff.full, 
+#                       cnty.resent.full, 
+#                       therm.1860,
+#                       se = list(NULL, NULL, NULL, NULL, 
+#                                 therm.1860.rse[,2]),
+#                   keep = "pslave1860", 
+#                   style = "apsr", 
+#                   omit.stat = c("adj.rsq","ll", "F", "ser"),
+#                   covariate.labels = c("Prop. Slave, 1860"), 
+#                   dep.var.labels = c("Prop Democrat", "Affirm. Action", "Racial Resentment"),
+#                   column.sep.width = "5pt", 
+#                   float = FALSE,
+#                   header = FALSE,
+#                   add.lines = list(rep("", 4), c("Level", "County", "County", "County", "County", "Individual"),
+#                                    ch.row("1860 Covariates", c(FALSE, rep(TRUE,3), FALSE)), 
+#                                    ch.row("State Fixed Effects", c(FALSE, rep(TRUE,4))), 
+#                                    ch.row("State-Year Fixed Effects", c(rep(FALSE,4), TRUE)), 
+#                                    ch.row("Clustered SEs", c(rep(FALSE,4), TRUE)), rep("", 4)), 
+#                   multicolumn = TRUE)
+# 
+# tab1.alt[4] <- "\\\\[-1.8ex] & \\multicolumn{2}{c}{Proportion} & Support for & Racial  & White-Black  \\\\ "
+# 
+# tab1.alt <- append(tab1.alt, " & \\multicolumn{2}{c}{Democrat} & Affirm. Action &  Resentment & Therm. Diff  \\\\ ", 
+#                    after = 4)
+# 
+# tab1.alt <- gsub("\\{\\*\\}", "\\{\\\\dagger\\}", tab1.alt)
+# 
+# tab1.alt <- gsub("\\{\\*\\*\\}", "\\{\\*\\}", tab1.alt)
+# 
+# tab1.alt <- gsub("\\{\\*\\*\\*\\}", "\\{\\*\\*\\}", tab1.alt)
+# 
+# tab1.alt <- tab1.alt[-(length(tab1.alt)-1)]
+# 
+# cat(paste(tab1.alt, collapse = "\n"), "\n")
 
 #cat(paste(tab1.alt, collapse = "\n"), "\n", file = "../tables/main-results.tex")
 ```
 
-```{r  table 2, results="asis"}
+```{r  table 2, results="asis", cache=TRUE}
+
+cnty.res.neighbor <- lm(update(base1860.form, dem ~ .), 
+                        data = south.counties, 
+                        weights = sample.size, 
+                        subset = nmatch.diff.20 == 1)
+
+cnty.aff.neighbor <- lm(update(base1860.form, affirm ~ .), 
+                        data = south.counties,
+                        weights = sample.size, 
+                        subset = nmatch.diff.20 == 1)
+
+cnty.resent.neighbor <- lm(update(base1860.form, resent ~ .), 
+                           data = south.counties, 
+                           weights = sample.size.res, 
+                           subset = nmatch.diff.20 == 1)
 
 ## Matching (Non-slave south versus north)
 ## Note that there will be some slight deviation from the results in
@@ -491,40 +475,41 @@ mdata <- wh.counties[which(!(wh.counties$state.abb %in% st.list) | wh.counties$p
 
 mdata <- mdata[which(!(mdata$state.abb %in% c("MD", "DE"))), ]
 
-mvars <- c("dem", "affirm", "resent","south", "fvalpc1860", "fbprop1860", "totpop1860", "longitude", "latitude", "coarea00")
+mvars <- c("dem", 
+           "affirm", 
+           "resent",
+           "south", 
+           "fvalpc1860",
+           "fbprop1860",
+           "totpop1860", 
+           "longitude",
+           "latitude", 
+           "coarea00")
 
 mdata$south <- 1 * (mdata$state.abb %in% st.list)
 
-#having trouble running this code, because I don't know what it does!
+mout <- cem(treatment = "south",
+            data = mdata[,mvars], 
+            drop = c("dem", 
+                     "affirm",
+                     "resent"),
+            k2k = TRUE,
+            datalist = NULL)
 
-mout <- cem("south",
-             data = mdata[,mvars],
-             drop = c("dem", "affirm", "resent"),
-             k2k = TRUE)
+match.dem <- lm(update(base1860.form, dem ~ south + . - pslave1860 - state.abb), 
+                data = mdata,
+                weights = sample.size, 
+                subset = mout$w > 0)
 
- unique(mdata$state.abb[mout$w > 0 & mdata$south == TRUE])
- unique(mdata$state.abb[mout$w > 0 & mdata$south == FALSE])
+match.aff <- lm(update(base1860.form, affirm ~ south + . - pslave1860 - state.abb), 
+                data = mdata,
+                weights = sample.size, 
+                subset = mout$w > 0)
 
- 
- # these are models to fit table 2, but I dont know what 'mout' was created for.
- 
- match.dem <- lm(update(base1860.form, dem ~ south + . - pslave1860 - state.abb),
-                 data = mdata,
-                 weights = sample.size,
-                 subset = mout$w > 0)
- summary(match.dem)
-
- match.aff <- lm(update(base1860.form, affirm ~ south + . - pslave1860 - state.abb),
-                 data = mdata,
-                 weights = sample.size,
-                 subset = mout$w > 0)
- summary(match.aff)
-
- match.resent <- lm(update(base1860.form, resent ~ south + . - pslave1860 - state.abb),
-                    data = mdata,
-                    weights = sample.size.res,
-                    subset = mout$w > 0)
- summary(match.resent)
+match.resent <- lm(update(base1860.form, resent ~ south + . - pslave1860 - state.abb), 
+                   data = mdata,
+                   weights = sample.size.res,
+                   subset = mout$w > 0)
 
 
 # Code chunks for Table 2 graphics:
